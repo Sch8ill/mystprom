@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/sch8ill/mystprom/monitor"
 	"os"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/sch8ill/mystprom/api/mystnodes"
 	"github.com/sch8ill/mystprom/config"
 	"github.com/sch8ill/mystprom/metrics"
+	"github.com/sch8ill/mystprom/monitor"
 )
 
 func main() {
@@ -47,9 +47,9 @@ func run(ctx *cli.Context) error {
 		return fmt.Errorf("failed to create CryptoCompare api client: %w", err)
 	}
 
-	monitor := monitor.New(mystApi, cryptoCompare, config.ScrapeInterval)
-	monitor.Start()
-	defer monitor.Stop()
+	m := monitor.New(mystApi, cryptoCompare, config.ScrapeInterval)
+	m.Start()
+	defer m.Stop()
 
 	if err := metrics.Listen(); err != nil {
 		return fmt.Errorf("failed to start prometheus exporter: %w", err)

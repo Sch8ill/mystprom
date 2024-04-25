@@ -1,4 +1,4 @@
-// Package mystnodes provides a wrapper for the mystnodes.com api.
+// Package mystnodes provides a wrapper for the my.mystnodes.com api.
 package mystnodes
 
 import (
@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	BaseURL           = "https://mystnodes.com"
+	BaseURL           = "https://my.mystnodes.com"
 	LoginPath         = "/api/v2/auth/login"
 	RefreshPath       = "/api/v2/auth/refresh"
 	NodesPath         = "/api/v1/nodes"

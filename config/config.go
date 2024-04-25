@@ -31,14 +31,14 @@ func DeclareFlags() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
 			Name:     MystAPIEmailFlag,
-			Usage:    "email address of the mystnodes.com account",
+			Usage:    "email address of the my.mystnodes.com account",
 			Required: true,
 			Aliases:  []string{"m"},
 			EnvVars:  []string{"MYSTPROM_EMAIL"},
 		},
 		&cli.StringFlag{
 			Name:     MystAPIPasswordFlag,
-			Usage:    "password of the mystnodes.com account",
+			Usage:    "password of the my.mystnodes.com account",
 			Required: true,
 			Aliases:  []string{"p"},
 			EnvVars:  []string{"MYSTPROM_PASSWORD"},

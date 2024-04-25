@@ -6,8 +6,8 @@
 
 ---
 
-`mytsprom` is a Prometheus exporter for monitoring Mysterium Network nodes using the mystnodes.com api.  
-`mystprom` offers all metrics found on mystnodes.com and more.  
+`mytsprom` is a Prometheus exporter for monitoring Mysterium Network nodes using the my.mystnodes.com api.  
+`mystprom` offers all metrics found on my.mystnodes.com and more.  
 The monitored metrics include a wide range of vital statistics, including:
 
 - `Node Online Status`: Provides real-time information on whether a node is actively online.
@@ -103,8 +103,8 @@ scrape_configs:
 ### CLI flags
 
 ```
-   --email value, -m value     email address of the mystnodes.com account [$MYSTPROM_EMAIL]
-   --password value, -p value  password of the mystnodes.com account [$MYSTPROM_PASSWORD]
+   --email value, -m value     email address of the my.mystnodes.com account [$MYSTPROM_EMAIL]
+   --password value, -p value  password of the my.mystnodes.com account [$MYSTPROM_PASSWORD]
    --interval value, -i value  interval the Mysterium Network api should be scraped in (default: 10m0s) [$MYSTPROM_INTERVAL]
    --metrics-address value     address the Prometheus metrics exporter listens on (default: ":9300") [$MYSTPROM_METRICS_ADDRESS]
    --refresh-file value        name of the file the refresh token is stored in (default: ".refresh_token.json") [$MYSTPROM_REFRESH_FILE]
