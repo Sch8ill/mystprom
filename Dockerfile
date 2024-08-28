@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o mystprom /go/src/mystprom/cmd/main.go
+RUN CGO_ENABLED=0 go build -ldflags="-s" -trimpath -o mystprom /go/src/mystprom/cmd/main.go
 
 FROM alpine:3.19
 

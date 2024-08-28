@@ -7,7 +7,7 @@ run:
 	go run $(target)
 
 build:
-	go build -o build/$(bin_name) $(target)
+	go build -ldflags="-s" -trimpath -o build/$(bin_name) $(target)
 
 clean:
 	rm -rf build
