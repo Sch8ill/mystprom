@@ -10,7 +10,7 @@ import (
 	"github.com/sch8ill/mystprom/api/client"
 	"github.com/sch8ill/mystprom/api/mystnodes/auth"
 	"github.com/sch8ill/mystprom/api/mystnodes/me"
-	"github.com/sch8ill/mystprom/api/mystnodes/nodes"
+	"github.com/sch8ill/mystprom/api/mystnodes/node"
 	"github.com/sch8ill/mystprom/api/mystnodes/notifications"
 	"github.com/sch8ill/mystprom/api/mystnodes/totals"
 )
@@ -19,10 +19,10 @@ const (
 	BaseURL           = "https://my.mystnodes.com"
 	LoginPath         = "/api/v2/auth/login"
 	RefreshPath       = "/api/v2/auth/refresh"
-	NodesPath         = "/api/v1/nodes"
+	NodePath          = "/api/v2/node"
 	TotalsPath        = "/api/v1/metrics/node-totals"
 	NotificationsPath = "/api/v1/me/notifications"
-	AccountInfoPath   = "/api/v1/me"
+	AccountInfoPath   = "/api/v2/me"
 )
 
 type Credentials struct {
@@ -92,22 +92,22 @@ func (m *MystAPI) Refresh() error {
 	return nil
 }
 
-func (m *MystAPI) Nodes() (*nodes.Nodes, error) {
+func (m *MystAPI) Nodes() (*node.Nodes, error) {
 	if err := m.authenticate(); err != nil {
 		return nil, err
 	}
 
-	totalNodes := &nodes.Nodes{Total: 1}
+	totalNodes := &node.Nodes{Total: 1}
 	nodeCount := 0
 	page := 1
 	for nodeCount < totalNodes.Total {
-		path := fmt.Sprintf("%s?page=%d&itemsPerPage=100", NodesPath, page)
+		path := fmt.Sprintf("%s?page=%d&itemsPerPage=100", NodePath, page)
 		res, err := m.client.Get(path)
 		if err != nil {
 			return nil, err
 		}
 
-		nodeList := new(nodes.Nodes)
+		nodeList := new(node.Nodes)
 		if err := m.parseResponse(res, nodeList); err != nil {
 			return nil, err
 		}
@@ -119,6 +119,44 @@ func (m *MystAPI) Nodes() (*nodes.Nodes, error) {
 	}
 
 	return totalNodes, nil
+}
+
+func (m *MystAPI) Node(identity string) (*node.Node, error) {
+	if err := m.authenticate(); err != nil {
+		return nil, err
+	}
+
+	path := fmt.Sprintf("%s/%s", NodePath, identity)
+	res, err := m.client.Get(path)
+	if err != nil {
+		return nil, err
+	}
+
+	n := new(node.Node)
+	if err := m.parseResponse(res, n); err != nil {
+		return nil, err
+	}
+
+	return n, nil
+}
+
+func (m *MystAPI) Sessions(identity string) ([]node.Session, error) {
+	if err := m.authenticate(); err != nil {
+		return nil, err
+	}
+
+	path := fmt.Sprintf("%s/%s/sessions", NodePath, identity)
+	res, err := m.client.Get(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var sessions []node.Session
+	if err := m.parseResponse(res, &sessions); err != nil {
+		return nil, err
+	}
+
+	return sessions, nil
 }
 
 func (m *MystAPI) Totals(identities []string) (*totals.Totals, error) {

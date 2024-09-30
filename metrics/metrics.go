@@ -1,11 +1,13 @@
 package metrics
 
 import (
+	"math"
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/exp/slices"
 
-	"github.com/sch8ill/mystprom/api/mystnodes/nodes"
-	"github.com/sch8ill/mystprom/api/mystnodes/totals"
+	"github.com/sch8ill/mystprom/api/mystnodes/node"
 )
 
 var nodeCount = prometheus.NewGauge(prometheus.GaugeOpts{
@@ -20,8 +22,8 @@ var nodeBandwidth = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 
 var nodeTraffic = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_node_traffic",
-	Help: "Traffic transferred by the node over the last 30 days",
-}, []string{"id", "name"})
+	Help: "Traffic transferred by the node by service and country over the last 30 days",
+}, []string{"id", "name", "service", "country"})
 
 var nodeUserID = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_node_user_id",
@@ -75,7 +77,7 @@ var nodeVendor = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 
 var nodeMalicious = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_node_malicious",
-	Help: "whether the node is tagged a malicious",
+	Help: "Whether the node is tagged a malicious",
 }, []string{"id", "name"})
 
 var nodeAvailableAt = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -95,7 +97,7 @@ var nodeUpdatedAt = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 
 var nodeDeleted = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_node_deleted",
-	Help: "whether the node is deleted",
+	Help: "Whether the node is deleted",
 }, []string{"id", "name"})
 
 var nodeLauncherVersion = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -105,12 +107,12 @@ var nodeLauncherVersion = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 
 var nodeIPTagged = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_node_ip_tagged",
-	Help: "whether the node is ip tagged",
+	Help: "Whether the node is ip tagged",
 }, []string{"id", "name"})
 
 var nodeMonitoringFailed = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_node_monitoring_failed",
-	Help: "whether monitoring on the node failed",
+	Help: "Whether monitoring on the node failed",
 }, []string{"id", "name"})
 
 var nodeMonitoringFailedLastAt = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -120,7 +122,7 @@ var nodeMonitoringFailedLastAt = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 
 var nodeOnline = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_node_online",
-	Help: "whether the node is online",
+	Help: "Whether the node is online",
 }, []string{"id", "name"})
 
 var nodeOnlineLastAt = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -155,7 +157,7 @@ var nodeQuality = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 
 var nodeService = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_node_service",
-	Help: "whether a service on the node is running",
+	Help: "Whether a service on the node is running",
 }, []string{"id", "name", "service"})
 
 var nodeMonitoringStatus = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -163,10 +165,20 @@ var nodeMonitoringStatus = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Help: "Monitoring status of the node",
 }, []string{"id", "name", "status"})
 
-var nodeServiceEarnings = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+var nodeEarnings = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_node_service_earnings",
-	Help: "Earnings by service of node over the last 30 days",
-}, []string{"id", "name", "service"})
+	Help: "Earnings of the node by service and country over the last 30 days",
+}, []string{"id", "name", "service", "country"})
+
+var nodeSessions = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	Name: "myst_node_sessions",
+	Help: "Number of sessions of the node by service and country over the last 30 days",
+}, []string{"id", "name", "service", "country"})
+
+var nodeSessionDurations = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	Name: "myst_node_session_durations",
+	Help: "Total duration of sessions of the node by service and country over the last 30 days",
+}, []string{"id", "name", "service", "country"})
 
 var mystPrice = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_token_price",
@@ -179,19 +191,45 @@ func init() {
 		nodeAvailableAt, nodeCreatedAt, nodeUpdatedAt, nodeDeleted, nodeLauncherVersion, nodeIPTagged,
 		nodeMonitoringFailed, nodeMonitoringFailedLastAt, nodeOnline, nodeOnlineLastAt, nodeStatusCreatedAt,
 		nodeStatusUpdatedAt, nodeIPCategory, nodeLocation, nodeQuality, nodeService, nodeMonitoringStatus,
-		nodeServiceEarnings, mystPrice)
+		nodeEarnings, nodeSessions, nodeSessionDurations, mystPrice)
 }
 
 func NodeCount(n int) {
 	nodeCount.Set(float64(n))
 }
 
-func NodeTotals(id string, name string, t *totals.Totals) {
-	nodeBandwidth.WithLabelValues(id, name).Set(t.BandwidthTotal)
-	nodeTraffic.WithLabelValues(id, name).Set(t.TrafficTotal)
+func NodeSessions(id string, name string, sessions []node.Session) {
+	type filter struct {
+		service string
+		country string
+	}
+
+	sessionCount := make(map[filter]int)
+	traffic := make(map[filter]float64)
+	durations := make(map[filter]time.Duration)
+	earnings := make(map[filter]float64)
+
+	for _, session := range sessions {
+		f := filter{
+			service: session.ServiceType,
+			country: session.ConsumerCountry,
+		}
+
+		sessionCount[f]++
+		traffic[f] += float64(session.Transferred) * math.Pow(10, -9) // convert bytes to GB
+		durations[f] += session.Duration
+		earnings[f] += session.Earning
+	}
+
+	for f, total := range sessionCount {
+		nodeSessions.WithLabelValues(id, name, f.service, f.country).Set(float64(total))
+		nodeTraffic.WithLabelValues(id, name, f.service, f.country).Set(traffic[f])
+		nodeSessionDurations.WithLabelValues(id, name, f.service, f.country).Set(float64(durations[f].Seconds()))
+		nodeEarnings.WithLabelValues(id, name, f.service, f.country).Set(earnings[f])
+	}
 }
 
-func NodeMetrics(node nodes.Node) {
+func NodeMetrics(node node.Node) {
 	nodeUserID.WithLabelValues(node.Identity, node.Name, node.UserID).Set(1)
 	nodeTermsVersion.WithLabelValues(node.Identity, node.Name, node.TermsVersion).Set(1)
 	nodeTermsAcceptedAt.WithLabelValues(node.Identity, node.Name).Set(float64(node.TermsAcceptedAt.Unix()))
@@ -225,7 +263,6 @@ func NodeMetrics(node nodes.Node) {
 	nodeQuality.WithLabelValues(node.Identity, node.Name).Set(node.NodeStatus.Quality)
 
 	for _, earnings := range node.Earnings {
-		nodeServiceEarnings.WithLabelValues(node.Identity, node.Name, earnings.Service).Set(earnings.EtherAmount)
 		nodeService.WithLabelValues(node.Identity, node.Name, earnings.Service).Set(
 			boolToFloat(slices.Contains(node.NodeStatus.ServiceTypes, earnings.Service)))
 	}

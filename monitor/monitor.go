@@ -9,8 +9,7 @@ import (
 
 	"github.com/sch8ill/mystprom/api/cryptocompare"
 	"github.com/sch8ill/mystprom/api/mystnodes"
-	"github.com/sch8ill/mystprom/api/mystnodes/nodes"
-	"github.com/sch8ill/mystprom/api/mystnodes/totals"
+	"github.com/sch8ill/mystprom/api/mystnodes/node"
 	"github.com/sch8ill/mystprom/config"
 	"github.com/sch8ill/mystprom/metrics"
 )
@@ -66,6 +65,35 @@ func (m *Monitor) run() {
 	}
 }
 
+func (m *Monitor) monitorNodes() error {
+	nodes, err := m.mystApi.Nodes()
+	if err != nil {
+		return fmt.Errorf("failed to get nodes: %w", err)
+	}
+
+	sessions, err := m.getSessions(listNodeIDs(nodes))
+	if err != nil {
+		return err
+	}
+
+	submitMetrics(nodes, sessions)
+	return nil
+}
+
+func (m *Monitor) getSessions(ids []string) (map[string][]node.Session, error) {
+	sessionMap := make(map[string][]node.Session)
+
+	for _, id := range ids {
+		sessions, err := m.mystApi.Sessions(id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get sessions for %s: %w", id, err)
+		}
+		sessionMap[id] = sessions
+	}
+
+	return sessionMap, nil
+}
+
 func (m *Monitor) updateMystPrices() error {
 	prices, err := m.cryptoCompare.MystPrices()
 	if err != nil {
@@ -75,47 +103,20 @@ func (m *Monitor) updateMystPrices() error {
 	return nil
 }
 
-func (m *Monitor) monitorNodes() error {
-	n, err := m.mystApi.Nodes()
-	if err != nil {
-		return fmt.Errorf("failed to get nodes: %w", err)
-	}
+func submitMetrics(nodes *node.Nodes, sessions map[string][]node.Session) {
+	metrics.NodeCount(nodes.Total)
 
-	t, err := m.getTotals(listNodeIDs(n))
-	if err != nil {
-		return err
-	}
-
-	submitMetrics(n, t)
-	return nil
-}
-
-func (m *Monitor) getTotals(ids []string) (map[string]*totals.Totals, error) {
-	tMap := make(map[string]*totals.Totals)
-
-	for _, id := range ids {
-		t, err := m.mystApi.Totals([]string{id})
-		if err != nil {
-			return nil, fmt.Errorf("failed to get node totals for %s: %w", id, err)
-		}
-		tMap[id] = t
-	}
-	return tMap, nil
-}
-
-func submitMetrics(n *nodes.Nodes, t map[string]*totals.Totals) {
-	metrics.NodeCount(n.Total)
-	names := nodeNames(n.Nodes)
-	for id, total := range t {
-		metrics.NodeTotals(id, names[id], total)
-	}
-
-	for _, node := range n.Nodes {
+	for _, node := range nodes.Nodes {
 		metrics.NodeMetrics(node)
 	}
+
+	names := nodeNames(nodes.Nodes)
+	for id, s := range sessions {
+		metrics.NodeSessions(id, names[id], s)
+	}
 }
 
-func nodeNames(n []nodes.Node) map[string]string {
+func nodeNames(n []node.Node) map[string]string {
 	names := make(map[string]string)
 	for _, node := range n {
 		names[node.Identity] = node.Name
@@ -123,7 +124,7 @@ func nodeNames(n []nodes.Node) map[string]string {
 	return names
 }
 
-func listNodeIDs(n *nodes.Nodes) (ids []string) {
+func listNodeIDs(n *node.Nodes) (ids []string) {
 	for _, node := range n.Nodes {
 		ids = append(ids, node.Identity)
 	}
