@@ -23,7 +23,7 @@ The monitored metrics include a wide range of vital statistics, including:
 ### Docker
 
 ```bash
-docker run -p 9300:9300 -e MYSTPROM_EMAIL="" -e MYSTPROM_PASSWORD="" sch8ill/mytsprom:latest
+docker run -p 9300:9300 -e MYSTPROM_EMAIL="" -e MYSTPROM_PASSWORD="" sch8ill/mystprom:latest
 ```
 
 ### Build
@@ -67,10 +67,10 @@ scrape_configs:
 | name                                | description                                           | labels             | type         |
 |-------------------------------------|-------------------------------------------------------|--------------------|--------------|
 | myst_node_bandwidth                 | Internet bandwidth of the node                        | id, name           | mbit/s       |
-| myst_node_traffic                   | Traffic transferred by the node over the last 30 days | id, name           | terabytes    |
+| myst_node_traffic                   | Traffic transferred by the node over the last 30 days | id, name, service, country | gigabytes    |
 | myst_node_quality                   | Quality score assigned to the node                    | id, name           | float        |
 | myst_node_service                   | whether a service on the node is running              | id, name, service  | boolean      |
-| myst_node_service_earnings          | Earnings by service of node over the last 30 days     | id, name, service  | MYST         |
+| myst_node_earnings                  | Earnings by service of node over the last 30 days     | id, name, service  | MYST         |
 | myst_token_price                    | Current price of the MYST token                       | currency           | EUR/USD      |
 | myst_node_location                  | Location of the node                                  | id, name, location | country code |
 | myst_node_external_ip               | External ip address of the node                       | id, name, ip       | ip           |
