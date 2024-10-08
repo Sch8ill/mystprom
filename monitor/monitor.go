@@ -10,6 +10,7 @@ import (
 	"github.com/sch8ill/mystprom/api/cryptocompare"
 	"github.com/sch8ill/mystprom/api/mystnodes"
 	"github.com/sch8ill/mystprom/api/mystnodes/node"
+	"github.com/sch8ill/mystprom/api/mystnodes/totals"
 	"github.com/sch8ill/mystprom/config"
 	"github.com/sch8ill/mystprom/metrics"
 )
@@ -71,12 +72,19 @@ func (m *Monitor) monitorNodes() error {
 		return fmt.Errorf("failed to get nodes: %w", err)
 	}
 
-	sessions, err := m.getSessions(listNodeIDs(nodes))
+	ids := listNodeIDs(nodes)
+
+	sessions, err := m.getSessions(ids)
 	if err != nil {
 		return err
 	}
 
-	submitMetrics(nodes, sessions)
+	t, err := m.getTotals(ids)
+	if err != nil {
+		return err
+	}
+
+	submitMetrics(nodes, sessions, t)
 	return nil
 }
 
@@ -94,6 +102,20 @@ func (m *Monitor) getSessions(ids []string) (map[string][]node.Session, error) {
 	return sessionMap, nil
 }
 
+func (m *Monitor) getTotals(ids []string) (map[string]*totals.Totals, error) {
+	totalsMap := make(map[string]*totals.Totals)
+
+	for _, id := range ids {
+		t, err := m.mystApi.Totals([]string{id})
+		if err != nil {
+			return nil, fmt.Errorf("failed to totals for %s: %w", id, err)
+		}
+		totalsMap[id] = t
+	}
+
+	return totalsMap, nil
+}
+
 func (m *Monitor) updateMystPrices() error {
 	prices, err := m.cryptoCompare.MystPrices()
 	if err != nil {
@@ -103,7 +125,7 @@ func (m *Monitor) updateMystPrices() error {
 	return nil
 }
 
-func submitMetrics(nodes *node.Nodes, sessions map[string][]node.Session) {
+func submitMetrics(nodes *node.Nodes, sessions map[string][]node.Session, t map[string]*totals.Totals) {
 	metrics.NodeCount(nodes.Total)
 
 	for _, node := range nodes.Nodes {
@@ -113,6 +135,10 @@ func submitMetrics(nodes *node.Nodes, sessions map[string][]node.Session) {
 	names := nodeNames(nodes.Nodes)
 	for id, s := range sessions {
 		metrics.NodeSessions(id, names[id], s)
+	}
+
+	for id, nodeTotals := range t {
+		metrics.NodeTotals(id, names[id], nodeTotals)
 	}
 }
 

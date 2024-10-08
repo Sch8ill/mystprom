@@ -8,6 +8,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/sch8ill/mystprom/api/mystnodes/node"
+	"github.com/sch8ill/mystprom/api/mystnodes/totals"
 )
 
 var nodeCount = prometheus.NewGauge(prometheus.GaugeOpts{
@@ -166,7 +167,7 @@ var nodeMonitoringStatus = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 }, []string{"id", "name", "status"})
 
 var nodeEarnings = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-	Name: "myst_node_service_earnings",
+	Name: "myst_node_earnings",
 	Help: "Earnings of the node by service and country over the last 30 days",
 }, []string{"id", "name", "service", "country"})
 
@@ -266,6 +267,10 @@ func NodeMetrics(node node.Node) {
 		nodeService.WithLabelValues(node.Identity, node.Name, earnings.Service).Set(
 			boolToFloat(slices.Contains(node.NodeStatus.ServiceTypes, earnings.Service)))
 	}
+}
+
+func NodeTotals(id string, name string, t *totals.Totals) {
+	nodeBandwidth.WithLabelValues(id, name).Set(t.BandwidthTotal)
 }
 
 func MystPrices(prices map[string]float64) {

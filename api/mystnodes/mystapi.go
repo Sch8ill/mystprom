@@ -3,7 +3,9 @@ package mystnodes
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -153,6 +155,9 @@ func (m *MystAPI) Sessions(identity string) ([]node.Session, error) {
 
 	var sessions []node.Session
 	if err := m.parseResponse(res, &sessions); err != nil {
+		if errors.Is(err, io.EOF) {
+			return []node.Session{}, nil
+		}
 		return nil, err
 	}
 
