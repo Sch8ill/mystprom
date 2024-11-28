@@ -37,7 +37,7 @@ func run(ctx *cli.Context) error {
 
 	refreshToken, err := mystnodes.NewTokenFromFile(config.RefreshFile)
 	if err != nil {
-		log.Debug().Err(err).Msg("failed to load refresh token")
+		log.Debug().Err(err).Msg("refresh token cache miss (non-critical)")
 	}
 
 	mystApi := mystnodes.NewWithRefreshToken(credentials, refreshToken)
