@@ -168,18 +168,38 @@ var nodeMonitoringStatus = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 
 var nodeEarnings = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_node_earnings",
-	Help: "Earnings of the node by service and country over the last 30 days",
-}, []string{"id", "name", "service", "country"})
+	Help: "Earnings by node and service over the last 30 days",
+}, []string{"id", "name", "service"})
 
 var nodeSessions = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_node_sessions",
 	Help: "Number of sessions of the node by service and country over the last 30 days",
 }, []string{"id", "name", "service", "country"})
 
+var nodeSessionEarnings = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	Name: "myst_node_session_earnings",
+	Help: "Earnings by node, service and country generated from session log",
+}, []string{"id", "name", "service", "country"})
+
 var nodeSessionDurations = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_node_session_durations",
 	Help: "Total duration of sessions of the node by service and country over the last 30 days",
 }, []string{"id", "name", "service", "country"})
+
+var nodeLifetimeEarnings = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	Name: "myst_node_earnings_lifetime",
+	Help: "Total lifetime earnings by node",
+}, []string{"id", "name"})
+
+var nodeSettledEarnings = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	Name: "myst_node_earnings_settled",
+	Help: "Total settled earnings by node",
+}, []string{"id", "name"})
+
+var nodeUnsettledEarnings = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	Name: "myst_node_earnings_unsettled",
+	Help: "Unsettled earnings by node",
+}, []string{"id", "name"})
 
 var mystPrice = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_token_price",
@@ -192,7 +212,8 @@ func init() {
 		nodeAvailableAt, nodeCreatedAt, nodeUpdatedAt, nodeDeleted, nodeLauncherVersion, nodeIPTagged,
 		nodeMonitoringFailed, nodeMonitoringFailedLastAt, nodeOnline, nodeOnlineLastAt, nodeStatusCreatedAt,
 		nodeStatusUpdatedAt, nodeIPCategory, nodeLocation, nodeQuality, nodeService, nodeMonitoringStatus,
-		nodeEarnings, nodeSessions, nodeSessionDurations, mystPrice)
+		nodeEarnings, nodeSessions, nodeSessionEarnings, nodeSessionDurations, nodeLifetimeEarnings,
+		nodeSettledEarnings, nodeUnsettledEarnings, mystPrice)
 }
 
 func NodeCount(n int) {
@@ -226,7 +247,7 @@ func NodeSessions(id string, name string, sessions []node.Session) {
 		nodeSessions.WithLabelValues(id, name, f.service, f.country).Set(float64(total))
 		nodeTraffic.WithLabelValues(id, name, f.service, f.country).Set(traffic[f])
 		nodeSessionDurations.WithLabelValues(id, name, f.service, f.country).Set(float64(durations[f].Seconds()))
-		nodeEarnings.WithLabelValues(id, name, f.service, f.country).Set(earnings[f])
+		nodeSessionEarnings.WithLabelValues(id, name, f.service, f.country).Set(earnings[f])
 	}
 }
 
@@ -264,9 +285,16 @@ func NodeMetrics(node node.Node) {
 	nodeQuality.WithLabelValues(node.Identity, node.Name).Set(node.NodeStatus.Quality)
 
 	for _, earnings := range node.Earnings {
+		nodeEarnings.WithLabelValues(node.Identity, node.Name, earnings.Service).Set(earnings.EtherAmount)
 		nodeService.WithLabelValues(node.Identity, node.Name, earnings.Service).Set(
 			boolToFloat(slices.Contains(node.NodeStatus.ServiceTypes, earnings.Service)))
 	}
+}
+
+func NodeLifetimeEarnings(id string, name string, earnings node.LifetimeEarnings) {
+	nodeLifetimeEarnings.WithLabelValues(id, name).Set(earnings.Total)
+	nodeSettledEarnings.WithLabelValues(id, name).Set(earnings.Settled)
+	nodeUnsettledEarnings.WithLabelValues(id, name).Set(earnings.Unsettled)
 }
 
 func NodeTotals(id string, name string, t *totals.Totals) {

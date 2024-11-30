@@ -71,6 +71,12 @@ scrape_configs:
 | myst_node_quality                   | Quality score assigned to the node                    | id, name           | float        |
 | myst_node_service                   | whether a service on the node is running              | id, name, service  | boolean      |
 | myst_node_earnings                  | Earnings by service of node over the last 30 days     | id, name, service  | MYST         |
+| myst_node_earnings_lifetime         | Total lifetime earnings by node                       | id, name           | MYST         |
+| myst_node_earnings_settled          | Total settled earnings by node                        | id, name           | MYST         |
+| myst_node_earnings_unsettled        | Unsettled earnings by node                            | id, name           | MYST         |
+| myst_node_sessions                  | Number of sessions of the node over the last 30 days  | id, name, service, country | int  |
+| myst_node_session_earings           | Earnings by node, generated from session log          | id, name, service, country | MYST |
+| myst_node_session_durations         | Total duration of sessions over the last 30 days      | id, name, service, country | seconds |
 | myst_token_price                    | Current price of the MYST token                       | currency           | EUR/USD      |
 | myst_node_location                  | Location of the node                                  | id, name, location | country code |
 | myst_node_external_ip               | External ip address of the node                       | id, name, ip       | ip           |

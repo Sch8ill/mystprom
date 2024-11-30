@@ -79,13 +79,32 @@ func (m *Monitor) monitorNodes() error {
 		return err
 	}
 
+	lifetimeEarnings, err := m.getLifetimeEarnings(ids)
+	if err != nil {
+		return err
+	}
+
 	t, err := m.getTotals(ids)
 	if err != nil {
 		return err
 	}
 
-	submitMetrics(nodes, sessions, t)
+	submitMetrics(nodes, sessions, lifetimeEarnings, t)
 	return nil
+}
+
+func (m *Monitor) getLifetimeEarnings(ids []string) (map[string]node.LifetimeEarnings, error) {
+	earningsMap := make(map[string]node.LifetimeEarnings)
+
+	for _, id := range ids {
+		n, err := m.mystApi.Node(id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get lifetime earnings for %s: %w", id, err)
+		}
+		earningsMap[id] = *n.LifetimeEarnings
+	}
+
+	return earningsMap, nil
 }
 
 func (m *Monitor) getSessions(ids []string) (map[string][]node.Session, error) {
@@ -125,7 +144,7 @@ func (m *Monitor) updateMystPrices() error {
 	return nil
 }
 
-func submitMetrics(nodes *node.Nodes, sessions map[string][]node.Session, t map[string]*totals.Totals) {
+func submitMetrics(nodes *node.Nodes, sessions map[string][]node.Session, lifetimeEarnings map[string]node.LifetimeEarnings, t map[string]*totals.Totals) {
 	metrics.NodeCount(nodes.Total)
 
 	for _, node := range nodes.Nodes {
@@ -135,6 +154,10 @@ func submitMetrics(nodes *node.Nodes, sessions map[string][]node.Session, t map[
 	names := nodeNames(nodes.Nodes)
 	for id, s := range sessions {
 		metrics.NodeSessions(id, names[id], s)
+	}
+
+	for id, earnings := range lifetimeEarnings {
+		metrics.NodeLifetimeEarnings(id, names[id], earnings)
 	}
 
 	for id, nodeTotals := range t {
