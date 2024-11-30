@@ -23,8 +23,8 @@ var nodeBandwidth = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 
 var nodeTraffic = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_node_traffic",
-	Help: "Traffic transferred by the node by service and country over the last 30 days",
-}, []string{"id", "name", "service", "country"})
+	Help: "Traffic transferred by the node over the last 30 days",
+}, []string{"id", "name"})
 
 var nodeUserID = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_node_user_id",
@@ -181,6 +181,11 @@ var nodeSessionEarnings = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Help: "Earnings by node, service and country generated from session log",
 }, []string{"id", "name", "service", "country"})
 
+var nodeSessionTraffic = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	Name: "myst_node_session_traffic",
+	Help: "Traffic served by node by service and country, generated from session log",
+}, []string{"id", "name", "service", "country"})
+
 var nodeSessionDurations = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_node_session_durations",
 	Help: "Total duration of sessions of the node by service and country over the last 30 days",
@@ -212,8 +217,8 @@ func init() {
 		nodeAvailableAt, nodeCreatedAt, nodeUpdatedAt, nodeDeleted, nodeLauncherVersion, nodeIPTagged,
 		nodeMonitoringFailed, nodeMonitoringFailedLastAt, nodeOnline, nodeOnlineLastAt, nodeStatusCreatedAt,
 		nodeStatusUpdatedAt, nodeIPCategory, nodeLocation, nodeQuality, nodeService, nodeMonitoringStatus,
-		nodeEarnings, nodeSessions, nodeSessionEarnings, nodeSessionDurations, nodeLifetimeEarnings,
-		nodeSettledEarnings, nodeUnsettledEarnings, mystPrice)
+		nodeEarnings, nodeSessions, nodeSessionEarnings, nodeSessionTraffic, nodeSessionDurations,
+		nodeLifetimeEarnings, nodeSettledEarnings, nodeUnsettledEarnings, mystPrice)
 }
 
 func NodeCount(n int) {
@@ -245,7 +250,7 @@ func NodeSessions(id string, name string, sessions []node.Session) {
 
 	for f, total := range sessionCount {
 		nodeSessions.WithLabelValues(id, name, f.service, f.country).Set(float64(total))
-		nodeTraffic.WithLabelValues(id, name, f.service, f.country).Set(traffic[f])
+		nodeSessionTraffic.WithLabelValues(id, name, f.service, f.country).Set(traffic[f])
 		nodeSessionDurations.WithLabelValues(id, name, f.service, f.country).Set(float64(durations[f].Seconds()))
 		nodeSessionEarnings.WithLabelValues(id, name, f.service, f.country).Set(earnings[f])
 	}
@@ -299,6 +304,7 @@ func NodeLifetimeEarnings(id string, name string, earnings node.LifetimeEarnings
 
 func NodeTotals(id string, name string, t *totals.Totals) {
 	nodeBandwidth.WithLabelValues(id, name).Set(t.BandwidthTotal)
+	nodeTraffic.WithLabelValues(id, name).Set(t.TrafficTotal * 1024)
 }
 
 func MystPrices(prices map[string]float64) {
