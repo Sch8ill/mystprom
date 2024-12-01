@@ -41,6 +41,7 @@ func (c *CryptoCompare) Prices(symbol string, currencies []string) (map[string]f
 	if err := json.NewDecoder(res.Body).Decode(&prices); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
+	prices[MystSymbol] = 1
 
 	return prices, nil
 }
