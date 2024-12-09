@@ -21,7 +21,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "10.1.5"
+      "version": "11.3.1"
     },
     {
       "type": "datasource",
@@ -63,7 +63,6 @@
   "graphTooltip": 0,
   "id": null,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
       "collapsed": false,
@@ -93,12 +92,16 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "orange",
+                "value": 0.01
+              },
+              {
+                "color": "green",
+                "value": 1
               }
             ]
           }
@@ -111,80 +114,13 @@
         "x": 0,
         "y": 1
       },
-      "id": 2,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.1.5",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "sum(myst_node_earnings{name=~\"$name\"})",
-          "instant": true,
-          "legendFormat": "__auto",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Earnings in MYST last 30 days",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "currencyEUR"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 6,
-        "y": 1
-      },
       "id": 7,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -192,9 +128,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -216,7 +154,77 @@
         }
       ],
       "title": "Earnings in $currency last 30 days",
-      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0.01
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "id": 59,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "(sum(myst_node_earnings_lifetime{name=~\"$name\"}) - sum(myst_node_earnings_lifetime{name=~\"$name\"} offset 24h)) * sum(myst_token_price{currency=\"$currency\"})",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Last 24h earnings in $currency",
       "type": "stat"
     },
     {
@@ -237,10 +245,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           }
@@ -253,12 +257,13 @@
         "x": 12,
         "y": 1
       },
-      "id": 12,
+      "id": 55,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -266,9 +271,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -277,14 +284,14 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(myst_node_earnings_lifetime{name=~\"$name\"})",
+          "expr": "sum(myst_node_earnings_unsettled{name=~\"$name\"}) * sum(myst_token_price{currency=\"$currency\"})",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Lifetime earnings in MYST",
+      "title": "Unsettled earnings in $currency",
       "type": "stat"
     },
     {
@@ -292,6 +299,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -302,16 +310,19 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "#EAB839",
+                "value": 1
+              },
+              {
+                "color": "green",
+                "value": 10
               }
             ]
-          },
-          "unit": "currencyEUR"
+          }
         },
         "overrides": []
       },
@@ -321,12 +332,13 @@
         "x": 18,
         "y": 1
       },
-      "id": 13,
+      "id": 12,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -334,9 +346,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -346,7 +360,6 @@
           "editorMode": "code",
           "exemplar": false,
           "expr": "sum(myst_node_earnings_lifetime{name=~\"$name\"}) * sum(myst_token_price{currency=\"$currency\"})",
-          "format": "time_series",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
@@ -354,7 +367,6 @@
         }
       ],
       "title": "Lifetime earnings in $currency",
-      "transformations": [],
       "type": "stat"
     },
     {
@@ -368,11 +380,13 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
@@ -405,10 +419,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           }
@@ -417,7 +427,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 24,
+        "w": 12,
         "x": 0,
         "y": 9
       },
@@ -434,6 +444,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -442,15 +453,123 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "myst_node_earnings{name=~\"$name\"} / 30",
+          "expr": "delta(myst_node_earnings_lifetime{name=~\"$name\"}[24h]) * scalar(myst_token_price{currency=\"$currency\"})",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{name}}:{{service}}",
+          "legendFormat": "{{name}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Average daily earnings last 30 days",
+      "title": "Daily earnings in $currency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 60,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "myst_node_earnings_unsettled{name=~\"$name\"} * scalar(myst_token_price{currency=\"$currency\"})",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "myst_token_price{currency=\"$currency\"} * 5",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "auto settlement",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Unsettled earnings in $currency",
       "type": "timeseries"
     },
     {
@@ -481,16 +600,20 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "green",
+                "value": 10
               }
             ]
           },
-          "unit": "decgbytes"
+          "unit": "gbytes"
         },
         "overrides": []
       },
@@ -506,6 +629,7 @@
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -513,9 +637,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -545,11 +671,13 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
@@ -589,7 +717,7 @@
               }
             ]
           },
-          "unit": "decgbytes"
+          "unit": "gbytes"
         },
         "overrides": []
       },
@@ -612,6 +740,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -658,12 +787,16 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "orange",
+                "value": 0.02
+              },
+              {
+                "color": "green",
+                "value": 0.05
               }
             ]
           },
@@ -683,6 +816,7 @@
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -690,9 +824,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value"
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -721,11 +857,13 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
@@ -788,6 +926,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -816,7 +955,6 @@
       "id": 18,
       "panels": [],
       "repeat": "name",
-      "repeatDirection": "h",
       "title": "Node info",
       "type": "row"
     },
@@ -860,6 +998,7 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -867,9 +1006,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "name"
+        "showPercentChange": false,
+        "textMode": "name",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -903,12 +1044,16 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "orange",
+                "value": 0.01
+              },
+              {
+                "color": "green",
+                "value": 1
               }
             ]
           },
@@ -928,6 +1073,7 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -935,9 +1081,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value"
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -946,14 +1094,14 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(myst_node_earnings{name=\"$name\"})",
+          "expr": "sum(myst_node_earnings{name=\"$name\"}) * sum(myst_token_price{currency=\"$currency\"})",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Earnings in MYST",
+      "title": "Earnings in $currency",
       "type": "stat"
     },
     {
@@ -971,16 +1119,20 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "#EAB839",
+                "value": 1
+              },
+              {
+                "color": "green",
+                "value": 10
               }
             ]
           },
-          "unit": "decgbytes"
+          "unit": "gbytes"
         },
         "overrides": []
       },
@@ -996,6 +1148,7 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -1003,9 +1156,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value"
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -1039,12 +1194,16 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "orange",
+                "value": 0.02
+              },
+              {
+                "color": "green",
+                "value": 0.05
               }
             ]
           },
@@ -1058,12 +1217,13 @@
         "x": 18,
         "y": 36
       },
-      "id": 33,
+      "id": 56,
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -1071,9 +1231,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value"
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -1082,7 +1244,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "myst_node_bandwidth{name=\"$name\"}",
+          "expr": "sum(myst_node_bandwidth{name=~\"$name\"})",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
@@ -1102,17 +1264,27 @@
           "color": {
             "mode": "thresholds"
           },
-          "mappings": [],
+          "mappings": [
+            {
+              "options": {
+                "pending": {
+                  "color": "orange",
+                  "index": 1
+                },
+                "success": {
+                  "color": "green",
+                  "index": 0
+                }
+              },
+              "type": "value"
+            }
+          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           },
@@ -1132,6 +1304,7 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -1139,9 +1312,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "name"
+        "showPercentChange": false,
+        "textMode": "name",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -1168,8 +1343,10 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "continuous-RdYlGr"
+            "mode": "thresholds"
           },
+          "decimals": 1,
+          "fieldMinMax": false,
           "mappings": [],
           "max": 3,
           "min": -1,
@@ -1177,16 +1354,23 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "orange",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "green",
+                "value": 2
               }
             ]
-          },
-          "unit": "none"
+          }
         },
         "overrides": []
       },
@@ -1196,8 +1380,10 @@
         "x": 6,
         "y": 44
       },
-      "id": 35,
+      "id": 57,
       "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -1207,22 +1393,21 @@
           "values": false
         },
         "showThresholdLabels": true,
-        "showThresholdMarkers": true
+        "showThresholdMarkers": true,
+        "sizing": "auto"
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
+          "editorMode": "code",
+          "expr": "myst_node_quality{name=\"$name\"}",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A",
           "datasource": {
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "myst_node_quality{name=\"$name\"}",
-          "instant": true,
-          "legendFormat": "__auto",
-          "range": false,
-          "refId": "A"
+          }
         }
       ],
       "title": "Quality score",
@@ -1268,6 +1453,7 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -1275,9 +1461,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "name"
+        "showPercentChange": false,
+        "textMode": "name",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -1306,17 +1494,24 @@
           "color": {
             "mode": "thresholds"
           },
-          "mappings": [],
+          "mappings": [
+            {
+              "options": {
+                "None": {
+                  "color": "red",
+                  "index": 0
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "None",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           },
@@ -1330,12 +1525,13 @@
         "x": 18,
         "y": 44
       },
-      "id": 32,
+      "id": 58,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "orientation": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -1343,9 +1539,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "name"
+        "showPercentChange": false,
+        "textMode": "name",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -1354,14 +1552,14 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "myst_node_external_ip{name=\"$name\"}",
+          "expr": "myst_node_service{name=\"$name\"} > 0",
           "instant": true,
-          "legendFormat": "{{ip}}",
+          "legendFormat": "{{service}}",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "IP",
+      "title": "Acitve services",
       "type": "stat"
     },
     {
@@ -1370,7 +1568,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 86
+        "y": 103
       },
       "id": 17,
       "panels": [],
@@ -1392,12 +1590,12 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "green",
+                "value": 0
               }
             ]
           },
@@ -1409,7 +1607,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 87
+        "y": 104
       },
       "id": 11,
       "options": {
@@ -1417,6 +1615,7 @@
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -1424,9 +1623,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -1460,12 +1661,12 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "green",
+                "value": 0
               }
             ]
           },
@@ -1477,7 +1678,7 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 87
+        "y": 104
       },
       "id": 10,
       "options": {
@@ -1485,6 +1686,7 @@
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -1492,9 +1694,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.5",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -1515,8 +1719,7 @@
     }
   ],
   "refresh": "30m",
-  "schemaVersion": 38,
-  "style": "dark",
+  "schemaVersion": 40,
   "tags": [],
   "templating": {
     "list": [
@@ -1527,9 +1730,7 @@
           "uid": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(myst_token_price,currency)",
-        "hide": 0,
         "includeAll": false,
-        "multi": false,
         "name": "currency",
         "options": [],
         "query": {
@@ -1538,8 +1739,6 @@
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
       },
       {
@@ -1549,10 +1748,8 @@
           "uid": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(myst_node_online,name)",
-        "hide": 1,
         "includeAll": true,
-        "label": "name",
-        "multi": false,
+        "label": "node",
         "name": "name",
         "options": [],
         "query": {
@@ -1561,20 +1758,18 @@
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
       }
     ]
   },
   "time": {
-    "from": "now-7d",
+    "from": "now-30d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Mysterium Nodes",
   "uid": "a060fa89-06d8-459a-92c0-c495c8a30ea3",
-  "version": 67,
+  "version": 109,
   "weekStart": ""
 }
