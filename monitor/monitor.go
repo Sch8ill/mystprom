@@ -55,6 +55,9 @@ func (m *Monitor) run() {
 			if err := m.monitorNodes(); err != nil {
 				log.Warn().Err(err).Msg("failed to monitor")
 			}
+			if err := m.updateRewardProgram(); err != nil {
+				log.Warn().Err(err).Msg("failed to update reward program")
+			}
 			if err := m.mystApi.RefreshToken().Save(config.RefreshFile); err != nil {
 				log.Warn().Err(err).Msg("failed to save refresh token")
 			}
@@ -133,6 +136,26 @@ func (m *Monitor) getTotals(ids []string) (map[string]*totals.Totals, error) {
 	}
 
 	return totalsMap, nil
+}
+
+func (m *Monitor) updateRewardProgram() error {
+	ranks, err := m.mystApi.RewardRanks()
+	if err != nil {
+		return fmt.Errorf("get reward ranks: %w", err)
+	}
+
+	points, err := m.mystApi.RewardPoints()
+	if err != nil {
+		return fmt.Errorf("get reward points: %w", err)
+	}
+
+	stats, err := m.mystApi.RewardStats()
+	if err != nil {
+		return fmt.Errorf("get reward stats: %w", err)
+	}
+
+	metrics.RewardProgram(ranks, points, stats)
+	return nil
 }
 
 func (m *Monitor) updateMystPrices() error {

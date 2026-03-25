@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/sch8ill/mystprom/api/client"
@@ -14,6 +15,7 @@ import (
 	"github.com/sch8ill/mystprom/api/mystnodes/me"
 	"github.com/sch8ill/mystprom/api/mystnodes/node"
 	"github.com/sch8ill/mystprom/api/mystnodes/notifications"
+	"github.com/sch8ill/mystprom/api/mystnodes/rewards"
 	"github.com/sch8ill/mystprom/api/mystnodes/totals"
 )
 
@@ -24,6 +26,10 @@ const (
 	NodePath          = "/api/v2/node"
 	TotalsPath        = "/api/v1/metrics/node-totals"
 	NotificationsPath = "/api/v1/me/notifications"
+	RewardClaimPath   = "/api/v2/reward-program/reward/claim"
+	RewardRanksPath   = "/api/v2/reward-program/ranks"
+	RewardPointsPath  = "/api/v2/reward-program/points"
+	RewardStatsPath   = "/api/v2/reward-program/stats"
 	AccountInfoPath   = "/api/v2/me"
 )
 
@@ -221,6 +227,96 @@ func (m *MystAPI) Notifications() ([]notifications.Notification, error) {
 	return n.Notifications, nil
 }
 
+func (m *MystAPI) RewardPoints() (*rewards.Points, error) {
+	if err := m.authenticate(); err != nil {
+		return nil, err
+	}
+
+	res, err := m.client.Get(RewardPointsPath)
+	if err != nil {
+		return nil, err
+	}
+
+	p := new(rewards.Points)
+	if err := m.parseResponse(res, p); err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+func (m *MystAPI) RewardStats() (*rewards.Stats, error) {
+	if err := m.authenticate(); err != nil {
+		return nil, err
+	}
+
+	type stats struct {
+		Data   []string `json:"data"`
+		Myst   []string `json:"myst"`
+		Uptime []string `json:"uptime"`
+		Nodes  []int    `json:"nodes"`
+	}
+
+	res, err := m.client.Get(RewardStatsPath)
+	if err != nil {
+		return nil, err
+	}
+
+	rawStats := new(stats)
+	if err := m.parseResponse(res, rawStats); err != nil {
+		return nil, err
+	}
+
+	s := new(rewards.Stats)
+	s.Data, err = parseFloatList(rawStats.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	s.Myst, err = parseFloatList(rawStats.Myst)
+	if err != nil {
+		return nil, err
+	}
+
+	s.Uptime, err = parseFloatList(rawStats.Uptime)
+	if err != nil {
+		return nil, err
+	}
+
+	s.Nodes = rawStats.Nodes
+
+	return s, nil
+}
+
+func (m *MystAPI) RewardRanks() ([]rewards.User, error) {
+	if err := m.authenticate(); err != nil {
+		return nil, err
+	}
+
+	const limit int = 100
+	var ranks []rewards.User
+	for i := 1; ; i++ {
+		res, err := m.client.Get(RewardRanksPath + fmt.Sprintf("?page=%d&limit=%d", i, limit))
+		if err != nil {
+			return nil, err
+		}
+
+		r := new(rewards.Ranks)
+		if err := m.parseResponse(res, r); err != nil {
+			return nil, err
+		}
+
+		ranks = append(ranks, r.Items...)
+
+		// total reached
+		if r.Total < i*limit {
+			break
+		}
+	}
+
+	return ranks, nil
+}
+
 func (m *MystAPI) RefreshToken() *Token {
 	return m.refreshToken
 }
@@ -281,4 +377,18 @@ func (m *MystAPI) handleApiError(res *http.Response) error {
 	}
 
 	return fmt.Errorf("api error response: %d: %+v", res.StatusCode, errRes)
+}
+
+func parseFloatList(list []string) ([]float64, error) {
+	parsed := []float64{}
+
+	for _, r := range list {
+		v, err := strconv.ParseFloat(r, 64)
+		if err != nil {
+			return nil, err
+		}
+		parsed = append(parsed, v)
+	}
+
+	return parsed, nil
 }

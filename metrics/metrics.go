@@ -8,6 +8,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/sch8ill/mystprom/api/mystnodes/node"
+	"github.com/sch8ill/mystprom/api/mystnodes/rewards"
 	"github.com/sch8ill/mystprom/api/mystnodes/totals"
 )
 
@@ -206,6 +207,36 @@ var nodeUnsettledEarnings = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Help: "Unsettled earnings by node",
 }, []string{"id", "name"})
 
+var rewardPoints = prometheus.NewGauge(prometheus.GaugeOpts{
+	Name: "myst_reward_points",
+	Help: "Collected reward points",
+})
+
+var rewardTraffic = prometheus.NewGauge(prometheus.GaugeOpts{
+	Name: "myst_reward_traffic",
+	Help: "Daily traffic accounted for in the reward program",
+})
+
+var rewardStake = prometheus.NewGauge(prometheus.GaugeOpts{
+	Name: "myst_reward_stake",
+	Help: "Staked MYST token in the reward program wallet",
+})
+
+var rewardUptime = prometheus.NewGauge(prometheus.GaugeOpts{
+	Name: "myst_reward_uptime",
+	Help: "Uptime for the reward program",
+})
+
+var rewardPointsTotal = prometheus.NewGauge(prometheus.GaugeOpts{
+	Name: "myst_reward_points_total",
+	Help: "Sum of all participants collected reward points",
+})
+
+var rewardParticipants = prometheus.NewGauge(prometheus.GaugeOpts{
+	Name: "myst_reward_participants",
+	Help: "Total participants in the reward program",
+})
+
 var mystPrice = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_token_price",
 	Help: "Current price of the MYST token",
@@ -218,7 +249,8 @@ func init() {
 		nodeMonitoringFailed, nodeMonitoringFailedLastAt, nodeOnline, nodeOnlineLastAt, nodeStatusCreatedAt,
 		nodeStatusUpdatedAt, nodeIPCategory, nodeLocation, nodeQuality, nodeService, nodeMonitoringStatus,
 		nodeEarnings, nodeSessions, nodeSessionEarnings, nodeSessionTraffic, nodeSessionDurations,
-		nodeLifetimeEarnings, nodeSettledEarnings, nodeUnsettledEarnings, mystPrice)
+		nodeLifetimeEarnings, nodeSettledEarnings, nodeUnsettledEarnings, rewardPoints, rewardTraffic,
+		rewardStake, rewardUptime, rewardPointsTotal, rewardParticipants, mystPrice)
 }
 
 func NodeCount(n int) {
@@ -305,6 +337,20 @@ func NodeLifetimeEarnings(id string, name string, earnings node.LifetimeEarnings
 func NodeTotals(id string, name string, t *totals.Totals) {
 	nodeBandwidth.WithLabelValues(id, name).Set(t.BandwidthTotal)
 	nodeTraffic.WithLabelValues(id, name).Set(t.TrafficTotal * 1024)
+}
+
+func RewardProgram(ranks []rewards.User, points *rewards.Points, stats *rewards.Stats) {
+	rewardPoints.Set(points.Total)
+	rewardTraffic.Set(stats.Data[0]) // TODO: unsafe...
+	rewardStake.Set(stats.Myst[0])
+	rewardUptime.Set(stats.Uptime[0])
+
+	var totalPoints float64
+	for _, p := range ranks {
+		totalPoints += p.PointsTotal
+	}
+	rewardPointsTotal.Set(totalPoints)
+	rewardParticipants.Set(float64(len(ranks)))
 }
 
 func MystPrices(prices map[string]float64) {
