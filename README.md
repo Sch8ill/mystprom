@@ -23,15 +23,15 @@ The monitored metrics include a wide range of vital statistics, including:
 ### Docker
 
 ```bash
-docker run -p 9300:9300 -e MYSTPROM_EMAIL="" -e MYSTPROM_PASSWORD="" sch8ill/mystprom:latest
+docker run -p 9300:9300 -e MYSTPROM_EMAIL="" -e MYSTPROM_PASSWORD="" ghcr.io/sch8ill/mystprom:latest
 ```
 
 ### Build
 
 Requires:
 
-```
-go >= 1.22
+```bash
+go
 make
 ```
 
@@ -109,7 +109,7 @@ scrape_configs:
 
 ### CLI flags
 
-```
+```bash
    --email value, -m value     email address of the my.mystnodes.com account [$MYSTPROM_EMAIL]
    --password value, -p value  password of the my.mystnodes.com account [$MYSTPROM_PASSWORD]
    --interval value, -i value  interval the Mysterium Network api should be scraped in (default: 10m0s) [$MYSTPROM_INTERVAL]
