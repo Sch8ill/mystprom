@@ -6,12 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/sch8ill/mystprom/api/client"
 	"github.com/sch8ill/mystprom/api/mystnodes/auth"
+	"github.com/sch8ill/mystprom/api/mystnodes/global-stats"
 	"github.com/sch8ill/mystprom/api/mystnodes/me"
 	"github.com/sch8ill/mystprom/api/mystnodes/node"
 	"github.com/sch8ill/mystprom/api/mystnodes/notifications"
@@ -30,6 +32,7 @@ const (
 	RewardRanksPath   = "/api/v2/reward-program/ranks"
 	RewardPointsPath  = "/api/v2/reward-program/points"
 	RewardStatsPath   = "/api/v2/reward-program/stats"
+	GlobalStatsPath   = "/api/v2/global-stats?categories=global"
 	AccountInfoPath   = "/api/v2/me"
 )
 
@@ -315,6 +318,47 @@ func (m *MystAPI) RewardRanks() ([]rewards.User, error) {
 	}
 
 	return ranks, nil
+}
+
+func (m *MystAPI) GlobalStats() (*stats.Global, error) {
+	if err := m.authenticate(); err != nil {
+		return nil, err
+	}
+
+	type stat struct {
+		Value struct {
+			TotalNodes     int    `json:"totalNodes,string"`
+			TotalTraffic   string `json:"totalTraffic"`
+			TotalCountries int    `json:"totalCountries,string"`
+		} `json:"value"`
+	}
+
+	res, err := m.client.Get(GlobalStatsPath)
+	if err != nil {
+		return nil, err
+	}
+
+	rawStat := []stat{}
+	if err := m.parseResponse(res, &rawStat); err != nil {
+		return nil, err
+	}
+
+	if len(rawStat) != 1 {
+		return nil, fmt.Errorf("unexpected array length: %d", len(rawStat))
+	}
+
+	s := &stats.Global{
+		TotalNodes:     rawStat[0].Value.TotalNodes,
+		TotalCountries: rawStat[0].Value.TotalCountries,
+	}
+	rawTotalTraffic, _ := strings.CutSuffix(rawStat[0].Value.TotalTraffic, " PB")
+	totalTraffic, err := strconv.ParseFloat(rawTotalTraffic, 64)
+	if err != nil {
+		return nil, err
+	}
+	s.TotalTraffic = int(totalTraffic * math.Pow10(13))
+
+	return s, nil
 }
 
 func (m *MystAPI) RefreshToken() *Token {

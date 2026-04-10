@@ -7,6 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/exp/slices"
 
+	stats "github.com/sch8ill/mystprom/api/mystnodes/global-stats"
 	"github.com/sch8ill/mystprom/api/mystnodes/node"
 	"github.com/sch8ill/mystprom/api/mystnodes/rewards"
 	"github.com/sch8ill/mystprom/api/mystnodes/totals"
@@ -237,6 +238,21 @@ var rewardParticipants = prometheus.NewGauge(prometheus.GaugeOpts{
 	Help: "Total participants in the reward program",
 })
 
+var globalNodes = prometheus.NewGauge(prometheus.GaugeOpts{
+	Name: "myst_global_nodes",
+	Help: "Global node count",
+})
+
+var globalTraffic = prometheus.NewGauge(prometheus.GaugeOpts{
+	Name: "myst_global_traffic",
+	Help: "Global traffic",
+})
+
+var globalCountries = prometheus.NewGauge(prometheus.GaugeOpts{
+	Name: "myst_global_countries",
+	Help: "Global countries",
+})
+
 var mystPrice = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "myst_token_price",
 	Help: "Current price of the MYST token",
@@ -250,7 +266,8 @@ func init() {
 		nodeStatusUpdatedAt, nodeIPCategory, nodeLocation, nodeQuality, nodeService, nodeMonitoringStatus,
 		nodeEarnings, nodeSessions, nodeSessionEarnings, nodeSessionTraffic, nodeSessionDurations,
 		nodeLifetimeEarnings, nodeSettledEarnings, nodeUnsettledEarnings, rewardPoints, rewardTraffic,
-		rewardStake, rewardUptime, rewardPointsTotal, rewardParticipants, mystPrice)
+		rewardStake, rewardUptime, rewardPointsTotal, rewardParticipants, globalNodes, globalTraffic,
+		globalCountries, mystPrice)
 }
 
 func NodeCount(n int) {
@@ -351,6 +368,12 @@ func RewardProgram(ranks []rewards.User, points *rewards.Points, stats *rewards.
 	}
 	rewardPointsTotal.Set(totalPoints)
 	rewardParticipants.Set(float64(len(ranks)))
+}
+
+func GlobalStats(stats *stats.Global) {
+	globalNodes.Set(float64(stats.TotalNodes))
+	globalTraffic.Set(float64(stats.TotalTraffic))
+	globalCountries.Set(float64(stats.TotalCountries))
 }
 
 func MystPrices(prices map[string]float64) {

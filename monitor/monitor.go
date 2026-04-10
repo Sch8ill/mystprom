@@ -18,9 +18,11 @@ import (
 type Monitor struct {
 	mystApi       *mystnodes.MystAPI
 	cryptoCompare *cryptocompare.CryptoCompare
-	interval      time.Duration
-	stop          chan struct{}
-	wg            sync.WaitGroup
+
+	interval time.Duration
+
+	stop chan struct{}
+	wg   sync.WaitGroup
 }
 
 func New(mystApi *mystnodes.MystAPI, cryptoCompare *cryptocompare.CryptoCompare, interval time.Duration) *Monitor {
@@ -57,6 +59,9 @@ func (m *Monitor) run() {
 			}
 			if err := m.updateRewardProgram(); err != nil {
 				log.Warn().Err(err).Msg("failed to update reward program")
+			}
+			if err := m.updateGlobalStats(); err != nil {
+				log.Warn().Err(err).Msg("failed to update global stats")
 			}
 			if err := m.mystApi.RefreshToken().Save(config.RefreshFile); err != nil {
 				log.Warn().Err(err).Msg("failed to save refresh token")
@@ -155,6 +160,16 @@ func (m *Monitor) updateRewardProgram() error {
 	}
 
 	metrics.RewardProgram(ranks, points, stats)
+	return nil
+}
+
+func (m *Monitor) updateGlobalStats() error {
+	stats, err := m.mystApi.GlobalStats()
+	if err != nil {
+		return fmt.Errorf("get global stats: %w", err)
+	}
+
+	metrics.GlobalStats(stats)
 	return nil
 }
 
