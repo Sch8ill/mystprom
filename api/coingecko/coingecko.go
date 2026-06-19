@@ -4,13 +4,14 @@ package coingecko
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/sch8ill/mystprom/api/client"
 )
 
 const (
 	BaseURL = "https://api.coingecko.com"
-	Path    = "/api/v3/simple/price?ids=mysterium&vs_currencies=eur,usd"
+	Path    = "/api/v3/simple/price?ids=mysterium&vs_currencies=EUR,USD"
 
 	MystSymbol = "MYST"
 	MystID     = "mysterium"
@@ -45,6 +46,12 @@ func (c *Coingecko) MystPrices() (map[string]float64, error) {
 
 	if _, ok := prices[MystID]; !ok {
 		return nil, fmt.Errorf("response does not contain: %s", MystID)
+	}
+
+	// key to upper
+	for key, val := range prices[MystID] {
+		prices[MystID][strings.ToUpper(key)] = val
+		delete(prices[MystID], key)
 	}
 
 	prices[MystID][MystSymbol] = 1
