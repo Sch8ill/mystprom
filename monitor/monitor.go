@@ -7,7 +7,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/sch8ill/mystprom/api/cryptocompare"
+	"github.com/sch8ill/mystprom/api/coingecko"
 	"github.com/sch8ill/mystprom/api/mystnodes"
 	"github.com/sch8ill/mystprom/api/mystnodes/node"
 	"github.com/sch8ill/mystprom/api/mystnodes/totals"
@@ -16,8 +16,8 @@ import (
 )
 
 type Monitor struct {
-	mystApi       *mystnodes.MystAPI
-	cryptoCompare *cryptocompare.CryptoCompare
+	mystApi   *mystnodes.MystAPI
+	coingecko *coingecko.Coingecko
 
 	interval time.Duration
 
@@ -25,12 +25,12 @@ type Monitor struct {
 	wg   sync.WaitGroup
 }
 
-func New(mystApi *mystnodes.MystAPI, cryptoCompare *cryptocompare.CryptoCompare, interval time.Duration) *Monitor {
+func New(mystApi *mystnodes.MystAPI, coingecko *coingecko.Coingecko, interval time.Duration) *Monitor {
 	return &Monitor{
-		mystApi:       mystApi,
-		cryptoCompare: cryptoCompare,
-		interval:      interval,
-		stop:          make(chan struct{}),
+		mystApi:   mystApi,
+		coingecko: coingecko,
+		interval:  interval,
+		stop:      make(chan struct{}),
 	}
 }
 
@@ -67,7 +67,7 @@ func (m *Monitor) run() {
 				log.Warn().Err(err).Msg("failed to save refresh token")
 			}
 			if err := m.updateMystPrices(); err != nil {
-				log.Warn().Err(err).Msg("")
+				log.Warn().Err(err).Msg("failed to update MYST prices")
 			}
 			time.Sleep(m.interval)
 		}
@@ -174,7 +174,7 @@ func (m *Monitor) updateGlobalStats() error {
 }
 
 func (m *Monitor) updateMystPrices() error {
-	prices, err := m.cryptoCompare.MystPrices()
+	prices, err := m.coingecko.MystPrices()
 	if err != nil {
 		return err
 	}

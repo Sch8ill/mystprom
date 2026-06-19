@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 
-	"github.com/sch8ill/mystprom/api/cryptocompare"
+	"github.com/sch8ill/mystprom/api/coingecko"
 	"github.com/sch8ill/mystprom/api/mystnodes"
 	"github.com/sch8ill/mystprom/config"
 	"github.com/sch8ill/mystprom/metrics"
@@ -40,14 +40,17 @@ func run(ctx *cli.Context) error {
 		log.Debug().Err(err).Msg("refresh token cache miss (non-critical)")
 	}
 
-	mystApi := mystnodes.NewWithRefreshToken(credentials, refreshToken)
+	mystApi, err := mystnodes.NewWithRefreshToken(credentials, refreshToken)
+	if err != nil {
+		return fmt.Errorf("failed to create MystAPI client: %w", err)
+	}
 
-	cryptoCompare, err := cryptocompare.New()
+	coingecko, err := coingecko.New()
 	if err != nil {
 		return fmt.Errorf("failed to create CryptoCompare api client: %w", err)
 	}
 
-	m := monitor.New(mystApi, cryptoCompare, config.ScrapeInterval)
+	m := monitor.New(mystApi, coingecko, config.ScrapeInterval)
 	m.Start()
 	defer m.Stop()
 
@@ -73,5 +76,5 @@ func createLogger() {
 		Out:        os.Stdout,
 		TimeFormat: time.DateTime,
 	}
-	log.Logger = log.Output(consoleWriter).Level(zerolog.DebugLevel).With().Timestamp().Logger()
+	log.Logger = log.Output(consoleWriter).Level(zerolog.DebugLevel).With().Timestamp().Caller().Logger()
 }

@@ -23,7 +23,11 @@ type CryptoCompare struct {
 }
 
 func New() (*CryptoCompare, error) {
-	c := client.New(BaseURL)
+	c, err := client.New(BaseURL)
+	if err != nil {
+		return nil, err
+	}
+
 	c.SetHeader("Content-Type", "application/json")
 	c.SetHeader("Accept", "application/json")
 

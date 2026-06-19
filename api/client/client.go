@@ -5,19 +5,28 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"net/http/cookiejar"
+	"net/url"
 )
 
 type HttpClient struct {
-	url     string
-	client  http.Client
-	headers map[string]string
+	url       string
+	client    http.Client
+	headers   map[string]string
+	cookiejar http.CookieJar
 }
 
-func New(url string) *HttpClient {
-	return &HttpClient{
-		url:     url,
-		headers: map[string]string{},
+func New(url string) (*HttpClient, error) {
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		return nil, err
 	}
+
+	return &HttpClient{
+		url:       url,
+		headers:   map[string]string{},
+		cookiejar: jar,
+	}, nil
 }
 
 func (c *HttpClient) Get(path string) (*http.Response, error) {
@@ -56,10 +65,20 @@ func (c *HttpClient) doRequest(path string, method string, body []byte) (*http.R
 		req.Header.Set(key, value)
 	}
 
+	baseURL, err := url.Parse(c.url)
+	if err != nil {
+		return nil, err
+	}
+	for _, cookie := range c.cookiejar.Cookies(baseURL) {
+		req.AddCookie(cookie)
+	}
+
 	res, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+
+	c.cookiejar.SetCookies(baseURL, res.Cookies())
 
 	return res, nil
 }

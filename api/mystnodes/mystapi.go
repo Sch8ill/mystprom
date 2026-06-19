@@ -48,12 +48,16 @@ type MystAPI struct {
 	refreshToken *Token
 }
 
-func New(credentials Credentials) *MystAPI {
+func New(credentials Credentials) (*MystAPI, error) {
 	return NewWithRefreshToken(credentials, nil)
 }
 
-func NewWithRefreshToken(credentials Credentials, refreshToken *Token) *MystAPI {
-	c := client.New(BaseURL)
+func NewWithRefreshToken(credentials Credentials, refreshToken *Token) (*MystAPI, error) {
+	c, err := client.New(BaseURL)
+	if err != nil {
+		return nil, err
+	}
+
 	// required by the api to parse post requests correctly
 	c.SetHeader("Content-Type", "application/json")
 	c.SetHeader("Accept", "application/json")
@@ -62,7 +66,7 @@ func NewWithRefreshToken(credentials Credentials, refreshToken *Token) *MystAPI 
 		client:       c,
 		credentials:  credentials,
 		refreshToken: refreshToken,
-	}
+	}, nil
 }
 
 func (m *MystAPI) Login() error {
