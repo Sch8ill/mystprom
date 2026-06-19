@@ -4,6 +4,7 @@ package coingecko
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/sch8ill/mystprom/api/client"
@@ -38,23 +39,27 @@ func (c *Coingecko) MystPrices() (map[string]float64, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
-	prices := make(map[string]map[string]float64)
-	if err := json.NewDecoder(res.Body).Decode(&prices); err != nil {
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
+
+	data := make(map[string]map[string]float64)
+	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	if _, ok := prices[MystID]; !ok {
+	if _, ok := data[MystID]; !ok {
 		return nil, fmt.Errorf("response does not contain: %s", MystID)
 	}
 
 	// key to upper
-	for key, val := range prices[MystID] {
-		prices[MystID][strings.ToUpper(key)] = val
-		delete(prices[MystID], key)
+	prices := make(map[string]float64)
+	for key, val := range data[MystID] {
+		prices[strings.ToUpper(key)] = val
 	}
+	prices[MystSymbol] = 1
 
-	prices[MystID][MystSymbol] = 1
-
-	return prices[MystID], nil
+	return prices, nil
 }
